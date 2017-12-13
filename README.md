@@ -138,3 +138,48 @@ pwd
 docker run -d -p 8080:3000 -v "$(pwd):/var/www" -w "/var/www" node npm start
 ```
 
+##Dockerfile##
+
+Criar o arquivo Dockerfile (default) para criar imagem:
+```
+docker run -p 8080:3000 -v "$(pwd):/var/www" -w "/var/www" node npm start
+```
+
+Dockerfile baseado no comando acima:
+```
+FROM node:latest
+MAINTAINER Luis Garcia
+ENV NODE_ENV=production
+ENV PORT=3000
+COPY . /var/www
+WORKDIR /var/www
+RUN npm install
+ENTRYPOINT ["npm", "start"]
+EXPOSE $PORT
+```
+
+[Buildando a imagem] Como o nome do nosso Dockerfile é o padrão, poderíamos omitir esse parâmetro, mas se o nome for diferente, por exemplo node.dockerfile, é preciso especificar, mas vamos deixar especificado para detalharmos melhor o comando.
+```
+docker build -f Dockerfile -t lgarcia/node
+```
+
+Agora que já temos a imagem criada, podemos criar um container a partir dela:
+```
+docker run -d -p 8080:3000 douglasq/node
+```
+
+Mandar imagem para o DockerHub (Compartilhar):
+* [DockerHub](https://hub.docker.com/)
+* Login no DockerHub
+
+Via linha de comando, faz o publish da imagem:
+```
+docker login
+
+docker push <NOME_DA_IMAGEM>
+```
+
+Para baixar imagem:
+```
+docker pull <NOME_DA_IMAGEM>
+```
