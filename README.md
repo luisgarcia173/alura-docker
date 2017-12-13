@@ -65,3 +65,49 @@ Share images, automate workflows, and more with a free Docker ID:
 For more examples and ideas, visit:
  https://docs.docker.com/engine/userguide/
 ```
+
+##Comandos Básicos##
+```
+#listar containers ativos
+docker ps
+
+#listar id dos containers ativos
+docker ps -q
+
+#listar containers parados
+docker ps -a
+
+#baixando e executando imagem
+docker run <IMAGE_NAME>
+
+#baixando e executando imagem de um usuário (docker run dockersamples/static-site)
+docker run <USER_NAME>/<IMAGE_NAME>
+
+#parametros: -d nao trava seu terminal, -P container liberar porta maquina para acessar browser, --name deixa nomear a sua imagem
+#ex 01: docker run -d -P --name meu-site dockersamples/static-site
+#ex 02: docker run -d -p 12345:80 dockersamples/static-site (-p permite vc selecionar qual porta sua maquina vai atender na porta 80 do container)
+#ex 03: docker run -d -P -e AUTHOR="Luis Garcia" dockersamples/static-site (-e cria variável ambiente dentro do container)
+
+#trabalhar dentro container
+docker run -it <CONTAINER_NAME>
+
+#verificar portas em uso pelo container
+docker port <CONTAINER_ID>
+
+#start/stop container (-t, parametro de tempo espera execução)
+docker start <CONTAINER_ID>
+docker stop -t 0 <CONTAINER_ID>
+docker stop -t 0 $(docker ps -q)
+
+#remover container inativo
+docker rm <CONTAINER_ID>
+
+#remover tds containers inativos (stopped)
+docker container prune
+
+#remover imagens
+docker rmi <IMAGE_NAME>
+```
+
+##Layered Filesystem##
+As camadas das imagens baixadas (READ-ONLY) são compartilhadas, caso precise baixar mais de uma imagem que utilize uma camada que já tenha baixada localmente, ela será compartilhada. Porém é possível alterar a camada base do container criado (READ-WRITE).
