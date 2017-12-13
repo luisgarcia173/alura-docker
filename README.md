@@ -24,18 +24,19 @@ O **Docker** nada mais é do que uma coleção de tecnologias para facilitar o d
 Outras tecnologias do Docker que facilitam a nossa vida e que veremos neste curso são o **Docker Compose**, um jeito fácil de definir e orquestrar múltiplos containers; o **Docker Swarm**, uma ferramenta para colocar múltiplos docker engines para trabalharem juntos em um cluster; o **Docker Hub**, um repositório com mais de 250 mil imagens diferentes para os nossos containers; e a **Docker Machine**, uma ferramenta que nos permite gerenciar o Docker em um host virtual.
 
 ##Instalação Docker##
-**Windows**: 
-> [download](https://www.docker.com/docker-windows)
-> Pré-Requisitos: Win 10 Pro, 64bits e Virtualização Habilitada
-> *O que rola por baixo panos: Instala o Docker Engine dentro de uma micro VM (Alpine Linux) e exige que SO tenha HyperVisor (Virtualização)*
+**Windows**: [Download](https://www.docker.com/docker-windows)
+>* Pré-Requisitos: Win 10 Pro, 64bits e Virtualização Habilitada
+>* *O que rola por baixo panos: Instala o Docker Engine dentro de uma micro VM (Alpine Linux) e exige que SO tenha HyperVisor (Virtualização)*
 
-**macOS**: [download](https://www.docker.com/docker-mac)
-> Pré-Requisitos: Modelo 2010+, OS X 10.11+, 4GB RAM, VirtualBox superior à 4.3.30
-> *O que rola por baixo panos: Instala o Docker Engine dentro de uma micro VM (Alpine Linux) e exige que SO tenha HyperKit (Virtualização)*
+**macOS**: [Download](https://www.docker.com/docker-mac)
+>* Pré-Requisitos: Modelo 2010+, OS X 10.11+, 4GB RAM, VirtualBox superior à 4.3.30
+>* *O que rola por baixo panos: Instala o Docker Engine dentro de uma micro VM (Alpine Linux) e exige que SO tenha HyperKit (Virtualização)*
 
 ##Execução##
 Abrir *terminal* e executar **docker version**
+
 Para criar hello-world: **docker run <NOME_DA_IMAGEM>**
+
 ```
 Unable to find image 'hello-world:latest' locally
 latest: Pulling from library/hello-world
