@@ -111,3 +111,30 @@ docker rmi <IMAGE_NAME>
 
 ##Layered Filesystem##
 As camadas das imagens baixadas (READ-ONLY) são compartilhadas, caso precise baixar mais de uma imagem que utilize uma camada que já tenha baixada localmente, ela será compartilhada. Porém é possível alterar a camada base do container criado (READ-WRITE).
+
+##Volumes##
+Containers são voláteis, logo pode adicionar e remover o container com certa frequência. Desta forma tudo o que for escrito no container será perdido. Sendo assim o uso de Volumes se faz necessário, pois voce cria ponteiro no seu container para um volume criado dentro do seu Docker Host.
+```
+#utilizar parametro -v para apontar a pasta do seu volume, sendo <PASTA_DOCKER_HOST>:<NOME_VOLUME>
+docker run -it -v "C:\Users\lgarcia\Desktop:/var/www" ubuntu
+```
+
+É possível verificar como volume foi montado executando:
+```
+docker inspect <ID_CONTAINER>
+```
+
+Isso possibilita vc usar containers especificos para determinadas linguagens, por exemplo:
+* Container Node: pode ter neste container node/npm instalado e criar um volume de dados com codigos node onde poderá ser executado somente neste container
+* Container Java: pode ter neste container configurado jdk/jvm e executar códigos java dentro do seu volume, sem a necessidade de cada desenvolvedor replicar ambiente.
+
+```
+
+cd Desktop/volume-exemplo/
+
+pwd
+
+#parametros: -d (detached), -p (portas), -v (volume), -w (work-directory)
+docker run -d -p 8080:3000 -v "$(pwd):/var/www" -w "/var/www" node npm start
+```
+
