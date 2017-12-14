@@ -139,7 +139,6 @@ docker run -d -p 8080:3000 -v "$(pwd):/var/www" -w "/var/www" node npm start
 ```
 
 ##Dockerfile##
-
 Criar o arquivo Dockerfile (default) para criar imagem:
 ```
 docker run -p 8080:3000 -v "$(pwd):/var/www" -w "/var/www" node npm start
@@ -183,3 +182,15 @@ Para baixar imagem:
 ```
 docker pull <NOME_DA_IMAGEM>
 ```
+
+##Networking no Docker##
+Normalmente uma aplicação é composta por diversas partes, sejam elas o load balancer/proxy, a aplicação em si, um banco de dados, etc. Quando estamos trabalhando com containers, é bem comum separarmos cada uma dessas partes em um container específico, para cada container ficar com somente uma única responsabilidade.
+
+Mas se temos uma parte da nossa aplicação em cada container, como podemos fazer para essas partes falarem entre elas? Pois para a nossa aplicação funcionar como um todo, os containers precisam trocar dados entre eles.
+
+
+A boa notícia é que no Docker, por padrão, já existe uma *default network*. Isso significa que, quando criamos os nossos containers, por padrão eles funcionam na mesma rede:
+
+
+Na rede padrão do Docker, só podemos realizar a comunicação utilizando IPs, mas se criarmos a nossa própria rede, podemos "batizar" os nossos containers, e realizar a comunicação entre eles utilizando os seus nomes:
+
