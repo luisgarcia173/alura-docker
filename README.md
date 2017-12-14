@@ -230,7 +230,6 @@ root@00f93075d079:/# ping meu-container-de-ubuntu
 ```
 
 ##Testando imagem com cenario real##
-
 ```
 docker pull douglasq/alura-books:cap05
 docker pull mongo
@@ -239,3 +238,191 @@ docker run -d --name meu-mongo --network minha-rede mongo
 
 docker run --network minha-rede --name minha-app -d -p 8080:3000 douglasq/alura-books:cap05
 ```
+
+##Docker Compose##
+Ao invés de subir todos esses containers na mão, o que vamos fazer é utilizar uma tecnologia aliada do Docker, chamada Docker Compose, feito para nos auxiliar a orquestrar melhor múltiplos containers. Ele funciona seguindo um arquivo de texto *YAML (extensão .yml)*, e nele nós descrevemos tudo o que queremos que aconteça para subir a nossa aplicação, todo o nosso processo de build, isto é, subir o banco, os containers das aplicações, etc.
+
+![Container Name](/img/load_balancer.png)
+
+Passos:
+* Configurar NGINX (load balancer e arquivos estaticos)
+* Configurar Aplicação
+* Configurar Banco
+
+Em todo arquivo de Docker Compose, que é uma espécie de receita de bolo para construirmos as diferentes partes da nossa aplicação, a primeira coisa que colocamos nele é a versão do Docker Compose que estamos utilizando:
+```
+version: '3'
+```
+
+Agora, começamos a descrever os nossos serviços. Um serviço é uma parte da nossa aplicação, lembrando do nosso diagrama temos NGINX, três Node, e o MongoDB como serviços. Logo, se queremos construir cinco containers, vamos construir cinco serviços, cada um deles com um nome específico (*docker-compose.yml*). 
+```
+version: '3'
+services:
+    nginx:
+        build:
+            dockerfile: ./docker/nginx.dockerfile
+            context: .
+        image: douglasq/nginx
+        container_name: nginx
+        ports:
+            - "80:80"
+        networks: 
+            - production-network
+        depends_on: 
+            - "node1"
+            - "node2"
+            - "node3"
+
+    mongodb:
+        image: mongo
+        networks: 
+            - production-network
+
+    node1:
+        build:
+            dockerfile: ./docker/alura-books.dockerfile
+            context: .
+        image: douglasq/alura-books
+        container_name: alura-books-1
+        ports:
+            - "3000"
+        networks: 
+            - production-network
+        depends_on:
+            - "mongodb"
+
+    node2:
+        build:
+            dockerfile: ./docker/alura-books.dockerfile
+            context: .
+        image: douglasq/alura-books
+        container_name: alura-books-2
+        ports:
+            - "3000"
+        networks: 
+            - production-network
+        depends_on:
+            - "mongodb"
+
+    node3:
+        build:
+            dockerfile: ./docker/alura-books.dockerfile
+            context: .
+        image: douglasq/alura-books
+        container_name: alura-books-3
+        ports:
+            - "3000"
+        networks: 
+            - production-network
+        depends_on:
+            - "mongodb"
+
+networks: 
+    production-network:
+        driver: bridge
+```
+
+Com o docker-compose.yml pronto, podemos subir os serviços, mas antes devemos garantir que temos todas as imagens envolvidas neste arquivo na nossa máquina. Para isso, dentro da pasta do nosso projeto, executamos o seguinte comando:
+```
+sudo docker-compose build
+```
+
+Com os serviços criados, podemos subi-los através do comando:
+```
+#subir serviços
+docker-compose up
+
+#caso queira rodar sem travar terminal com os logs
+docker-compose up -d
+
+#listar os serviços rodando
+docker-compose ps
+
+#parar serviços e remove
+docker-compose down
+
+#reiniciar os serviços
+docker-compose restart
+
+#help comandos
+docker-compose --help
+```
+
+Esse comando irá seguir o que escrevemos no docker-compose.yml, ou seja, cria a rede, o container do MongoDB, os três containers da aplicação e o container do NGINX. Depois, são exibidos alguns logs, sendo que cada um dos containers fica com uma cor diferente, para podermos distinguir melhor.
+
+E não é por que eles são serviços, que eles não tem um container por debaixo dos panos, então nós conseguimos interagir com os containers utilizando todos os comandos que já vimos no treinamento, por exemplo para testar a comunicação entre eles:
+```
+docker exec -it alura-books-1 ping alura-books-2
+```
+
+###Instalando o Docker Compose no Linux###
+O Docker Compose não é instalado por padrão no Linux, então você instalá-lo por fora. Para tal, baixe-o na sua versão mais atual, que pode ser visualizada no seu GitHub, executando o comando abaixo:
+```
+sudo curl -L https://github.com/docker/compose/releases/download/1.15.0/docker-compose-`uname -s`-`uname -m` -o /usr/local/bin/docker-compose
+```
+
+Após isso, dê permissão de execução para o docker-compose:
+```
+sudo chmod +x /usr/local/bin/docker-compose
+```
+
+##Sobre Microserviços##
+
+Já ouviu falar de Microserviços? Se já ouviu, pode pular a introdução abaixo e ir diretamente para a parte "Docker e Microserviços", senão continue comigo.
+
+Uma forma de desenvolver uma aplicação é colocar todas as funcionalidades em um único "lugar". Ou seja, a aplicação roda em uma única instância (ou servidor) que possui todas as funcionalidades. Isso talvez é a forma mais simples de criar uma aplicação (também a mais natural) mas quando a base de código cresce alguns problemas podem aparecer.
+
+Por exemplo, qualquer atualização ou bug fix necessita parar todo o sistema, buildar o sistema todo e subir novamente. Isso pode ficar demorado e lento. Em geral, quanto maior a base de código mais difícil será manter ela mesmo com uma boa cobertura de testes e as desvantagens não param por ai. Outro problema é se alguma funcionalidade possuir um gargalo no desempenho o sistema todo será afetado. Não é raro de ver sistemas onde relatórios só devem ser gerados à noite para não afetar o desempenho de outras funcionalidades. Outro problema comum é como ciclos de testes e build demorados (falta de agilidade no desenvolvimento), problemas no monitoramento da aplicação ou falta de escalabilidade. Enfim, o sistema se torna um legado pesado onde nenhum desenvolvedor gostaria de colocar a mão no fogo.
+
+##Arquitetura de Microservicos##
+Então a idéia é fugir desse tipo de arquitetura monolítica monstruosa e dividir ela em pequenos pedaços. Cada pedaço possui uma funcionalidade bem definida e roda como se fosse um "mini sistema" isolado. Ou seja, em vez de termos uma única aplicação enorme teremos várias instâncias menores que dividem e coordenam o trabalho. Essas instâncias são chamadas de Microserviços.
+
+Agora fica mais fácil monitorar cada serviço específico, atualizá-lo ou escalá-lo pois a base de código é muito menor, e assim o deploy e o teste serão mais rápido. Podemos agora achar soluções específicas para esse serviço sem precisar alterar os demais. Outra vantagem é que um desenvolvedor novo não precisa conhecer o sistema todo para alterar uma funcionalidade, basta ele focar na funcionalidade desse microservico.
+
+Importante também é que um microserviço seja acessível remotamente, normalmente usando o protocolo HTTP trocando mensagens JSON ou XML, mas nada impede que outro protocolo seja usado. Um microserviço pode usar outros serviços para coordenar o trabalho.
+
+Repare que isso é uma outra abordagem arquitetural bem diferente do monolítico e por isso também é chamado de arquitetura de microserviços.
+
+Por fim, uma arquitetura de Microserviços tem um grau de complexidade muito alta se comparada com uma arquitetura monolítica. Aliás, há aqueles profissionais que indicam partir para [uma arquitetura monolítica primeiro e mudar para uma baseada em microserviços depois](https://sdtimes.com/martin-fowler-monolithic-apps-first-microservices-later/), quando estritamente necessário.
+
+##Docker e Microserviços##
+Trabalhar com uma arquitetura de microserviços gera a necessidade de publicar o serviço de maneira rápida, leve, isolada e vimos que o Docker possui exatamente essas características! Com Docker e Docker Compose podemos criar um ambiente ideal para a publicação destes serviços.
+
+O Docker é uma ótima opção para rodar os microserviços pelo fato de isolar os containers. Essa utilização de containers para serviços individuais faz com que seja muito simples gerenciar e atualizar esses serviços, de maneira automatizada e rápida.
+
+##Docker Swarm##
+Ok, tudo bem até aqui. Agora vou ter vários serviços rodando usando o Docker. E para facilitar a criação desses containers já aprendemos usar o Docker Compose que sabe subir e orquestrar vários containers. O Docker Compose é a ferramenta ideal para coordenar a criação dos containers, no entanto para melhorar a escalabilidade e desempenho pode ser necessário criar muito mais containers para um serviço específico. Em outras palavras, agora gostaríamos de criar muitos containers aproveitando várias máquinas (virtuais ou físicas)! Ou seja, pode ser que um microserviços fique rodando em 20 containers usando três máquinas físicas diferentes. Como podemos facilmente subir e parar esses containers? Repare que o Docker Compose não é para isso e por isso existe uma outra ferramenta que se chama o Docker Swarm (que não faz parte do escopo desse curso).
+
+Docker Swarm facilita a criação e administração de um cluster de containers.
+
+##Docker Cloud##
+Entre os serviços na nuvem, podemos citar o Amazon Web Services, DigitalOcean e o Microsoft Azure, em que alugamos um servidor e hospedamos a nossa aplicação. Então, se alugarmos um servidor de qualquer uma dessas ou outras empresas, podemos pedir para subir uma máquina virtual, que provavelmente rodará um Linux, em que podemos instalar o Docker e fazer a nossa aplicação funcionar.
+
+Mas isso requer um trabalho manual, pois devemos ir até o AWS, alugar o servidor, criar a máquina, abrir as suas portas, instalar um sistema operacional, todo um custo para subirmos as partes inferiores do nosso sistema.
+
+Por isso a Docker, Inc. criou uma solução para nos poupar desse trabalho, que é o Docker Cloud, uma das tecnologias da empresa, que se conecta a algum dos serviços citados, e fica responsável de gerenciar essa parte de instalar a máquina virtual, subir um Linux e instalar o Docker, além de subir os nossos containers para nós:
+![Docker Cloud](/img/docker_cloud.png)
+
+###Pré-requisitos###
+> * Conta criada no DockerCloud
+> * Conta criada no AWS
+
+Ao criar a conta e fazer o login, vemos a tela inicial do Docker Cloud no Swarm Mode, mas não vamos trabalhar nesse modo, que é para quando queremos integrar diversos hosts do Docker, para conversar entre si, e não é isso que queremos, queremos somente um para subir os nossos containers.
+
+No menu lateral da esquerda, em *Repositories*, vemos as imagens salvas no nosso *Docker Hub*. Ainda no menu, vemos palavras já conhecidas, como *Containers* e *Services*, que fizemos na aula anterior. Ainda nesta aula, veremos sobre *Stacks*.
+
+Além disso, temos também *Nodes* e *Node Clusters*. *Nodes* representa o *Docker Host*, ou seja, onde iremos rodar o Docker. No nosso caso, queremos rodar o Docker em Linux, que estará em uma máquina virtual da AWS. Ou seja, o node nada mais é do que um nó que estará gerenciado pela Amazon.
+
+Para utilizarmos a infraestrutura que a Amazon nos provê dentro do Docker Cloud, precisamos fazer o link da conta da AWS com a conta do Docker Cloud. Fazemos isso também no menu lateral da esquerda, em *Cloud Settings*, na sessão *Cloud providers*, que lista quem podemos conectar à nossa conta do *Docker Cloud*.
+
+Na AWS:
+> * criar policy (Own Policy)
+> * criar role (Role for cross-account access)
+
+No DockerCloud:
+> * criar um node
+> * configurar node com os dados AWS
+
+###Node Clusters###
+Quando criamos um node, um nó, na verdade é criado por debaixo dos panos um node cluster, que é como se fosse uma coleção de vários nodes, onde podemos ter diversas máquinas virtuais falando uma com a outra, ou vários nodes em uma mesma máquina, mas como estamos fazendo uma aplicação simples, que não precisa de nada muito pesado, criamos um node só, então no nosso cluster só deve ter um nó rodando.
+
