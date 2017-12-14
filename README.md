@@ -187,10 +187,13 @@ docker pull <NOME_DA_IMAGEM>
 Normalmente uma aplicação é composta por diversas partes, sejam elas o load balancer/proxy, a aplicação em si, um banco de dados, etc. Quando estamos trabalhando com containers, é bem comum separarmos cada uma dessas partes em um container específico, para cada container ficar com somente uma única responsabilidade.
 
 Mas se temos uma parte da nossa aplicação em cada container, como podemos fazer para essas partes falarem entre elas? Pois para a nossa aplicação funcionar como um todo, os containers precisam trocar dados entre eles.
+
 ![Múltiplos Containers](/img/multiplos_containers.png)
 
 A boa notícia é que no Docker, por padrão, já existe uma *default network*. Isso significa que, quando criamos os nossos containers, por padrão eles funcionam na mesma rede:
+
 ![Default Network](/img/default_network.png)
 
 Na rede padrão do Docker, só podemos realizar a comunicação utilizando IPs, mas se criarmos a nossa própria rede, podemos "batizar" os nossos containers, e realizar a comunicação entre eles utilizando os seus nomes:
+
 ![Container Name](/img/container_name.png)
