@@ -194,6 +194,48 @@ A boa notícia é que no Docker, por padrão, já existe uma *default network*. 
 
 ![Default Network](/img/default_network.png)
 
+Agora, no primeiro container, vamos instalar o pacote iputils-ping para podermos executar o comando ping para verificar a comunicação entre os containers:
+```
+#rodar 2 containers de ubuntu
+docker run -it ubuntu
+
+#ja no terminal ubuntu
+root@973feeeeb1df:/# hostname -i
+
+#instala modulo de ping
+apt-get update && apt-get install iputils-ping
+
+#verifica ping do outro container
+ping <IP_OUTRO_CONTAINER>
+```
+
 Na rede padrão do Docker, só podemos realizar a comunicação utilizando IPs, mas se criarmos a nossa própria rede, podemos "batizar" os nossos containers, e realizar a comunicação entre eles utilizando os seus nomes:
 
 ![Container Name](/img/container_name.png)
+
+Isso não pode ser feito na rede padrão do Docker, somente quando criamos a nossa própria rede.
+
+##Criando a nossa própria rede do Docker##
+Então, vamos criar a nossa própria rede, através do comando docker network create, mas não é só isso, para esse comando também precisamos dizer qual driver vamos utilizar. Para o padrão que vimos, de ter uma nuvem e os containers compartilhando a rede, devemos utilizar o driver de bridge.
+```
+docker network create --driver bridge <NOME_REDE>
+
+docker network ls
+
+docker run -it --name meu-container-de-ubuntu --network minha-rede ubuntu
+docker run -it --name segundo-ubuntu --network minha-rede ubuntu
+
+#dentro do segundo ubuntu, ja eh possivel pingar pelo nome do container
+root@00f93075d079:/# ping meu-container-de-ubuntu
+```
+
+##Testando imagem com cenario real##
+
+```
+docker pull douglasq/alura-books:cap05
+docker pull mongo
+
+docker run -d --name meu-mongo --network minha-rede mongo
+
+docker run --network minha-rede --name minha-app -d -p 8080:3000 douglasq/alura-books:cap05
+```
